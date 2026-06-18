@@ -1,6 +1,25 @@
+# dependencies
+node_modules/
+
+# environment
+.env
+
+# runtime storage (CRITICAL)
 storage/
+uploads/
+logs/
+backups/
+mnt/
+*.db
+
+# media / large files
 *.rvz
 *.iso
 *.zip
 *.7z
+*.mp4
+*.mkv
+
+# OS / misc
+.DS_Store
 
