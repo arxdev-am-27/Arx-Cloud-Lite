@@ -1,0 +1,30 @@
+{
+  "user_3D0U3FxwiCjscuaQcjMMgZvZkE2": {
+    "folderName": "Anderson_Marcano",
+    "displayName": "Anderson Marcano",
+    "quota": null,
+    "isAdmin": true,
+    "createdAt": "2026-04-29T02:41:52.679Z"
+  },
+  "user_3D0aLnzhhjgNTqfPlmbXCNg0WTu": {
+    "folderName": "Carline_Marcano",
+    "displayName": "Carline Marcano",
+    "quota": 12884901888,
+    "isAdmin": false,
+    "createdAt": "2026-05-01T02:14:44.237Z"
+  },
+  "user_3DDlfC6Ng2TmQqkP1cxzgN79E05": {
+    "folderName": "Zakaryah_Marcano",
+    "displayName": "Zakaryah Marcano",
+    "quota": 12884901888,
+    "isAdmin": false,
+    "createdAt": "2026-05-03T00:00:00.000Z"
+  },
+  "user_3DDnZDbqzAiCSTelShPHGx00rpk": {
+    "folderName": "Amberlynn_Marcano",
+    "displayName": "Amberlynn Marcano",
+    "quota": 12884901888,
+    "isAdmin": false,
+    "createdAt": "2026-05-03T00:00:00.000Z"
+  }
+}

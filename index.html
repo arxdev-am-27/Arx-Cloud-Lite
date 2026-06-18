@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arx Cloud Lite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f0e;
+      --surface: #141716;
+      --surface2: #1c1f1d;
+      --border: #252825;
+      --accent: #4efa8a;
+      --accent-dim: #2a6647;
+      --text: #e8ede9;
+      --text-muted: #6b7a6d;
+      --danger: #fa4e4e;
+      --warning: #f0a030;
+      --folder: #f0c040;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-sans: 'IBM Plex Sans', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ─── LOGIN ─────────────────────────────────────────── */
+    #loginScreen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .login-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 380px;
+      animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .login-logo {
+      display: flex; align-items: center; gap: 12px;
+      font-family: var(--font-mono); font-size: 18px; font-weight: 600;
+      color: var(--accent); margin-bottom: 8px;
+    }
+    .login-logo-icon {
+      width: 36px; height: 36px; background: var(--accent); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-logo-icon svg { color: #0d0f0e; }
+    .login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 36px; }
+    .login-label { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .login-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--font-mono);
+      font-size: 14px; padding: 12px 14px; outline: none; transition: border-color 0.15s;
+      margin-bottom: 20px;
+    }
+    .login-input:focus { border-color: var(--accent-dim); }
+    .login-btn {
+      width: 100%; background: var(--accent); color: #0d0f0e; border: none;
+      border-radius: 8px; font-family: var(--font-sans); font-size: 14px;
+      font-weight: 600; padding: 13px; cursor: pointer; transition: background 0.15s;
+    }
+    .login-btn:hover { background: #6fffa0; }
+    .login-error {
+      background: rgba(250,78,78,0.1); border: 1px solid rgba(250,78,78,0.3);
+      border-radius: 6px; color: var(--danger); font-size: 13px;
+      padding: 10px 14px; margin-bottom: 16px; display: none;
+    }
+
+    /* ─── MAIN APP ──────────────────────────────────────── */
+    #appScreen { display: none; flex-direction: column; flex: 1; }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 56px; border-bottom: 1px solid var(--border);
+      background: var(--surface); position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { color: #0d0f0e; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-status { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .logout-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; padding: 5px 10px; cursor: pointer; transition: all 0.15s; }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    main { flex: 1; max-width: 1000px; width: 100%; margin: 0 auto; padding: 28px 20px; }
+
+    .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .breadcrumb { flex: 1; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+    .breadcrumb-part { cursor: pointer; color: var(--text-muted); transition: color 0.15s; white-space: nowrap; }
+    .breadcrumb-part:hover { color: var(--accent); }
+    .breadcrumb-part.active { color: var(--text); cursor: default; }
+    .breadcrumb-sep { color: var(--border); }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: var(--font-sans); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+    .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .action-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .input-row { display: flex; gap: 8px; align-items: center; }
+
+    input[type="text"] { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 7px 12px; outline: none; transition: border-color 0.15s; width: 200px; }
+    input[type="text"]:focus { border-color: var(--accent-dim); }
+    input[type="text"]::placeholder { color: var(--text-muted); }
+
+    .drop-zone { border: 1px dashed var(--border); border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; background: var(--surface); }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-dim); background: rgba(78,250,138,0.04); }
+    .drop-zone input[type="file"] { display: none; }
+    .drop-zone-text { font-size: 13px; color: var(--text-muted); }
+    .drop-zone-text span { color: var(--accent); font-weight: 500; cursor: pointer; }
+
+    .file-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .file-table-header { display: grid; grid-template-columns: 32px 1fr 90px 150px 100px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+    .file-row { display: grid; grid-template-columns: 32px 1fr 90px 150px 100px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.12s; animation: rowIn 0.2s ease both; }
+    @keyframes rowIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+    .file-row:last-child { border-bottom: none; }
+    .file-row:hover { background: var(--surface2); }
+    .file-icon { display: flex; align-items: center; }
+    .file-icon svg { width: 16px; height: 16px; }
+    .file-name { font-size: 13px; font-weight: 500; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-name:hover { color: var(--accent); }
+    .file-size, .file-modified { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+    .file-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .icon-btn { background: none; border: none; padding: 4px; border-radius: 4px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; transition: all 0.15s; }
+    .icon-btn:hover { color: var(--text); background: var(--surface2); }
+    .icon-btn.del:hover { color: var(--danger); }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    .empty-state { padding: 60px 20px; text-align: center; color: var(--text-muted); }
+    .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.3; }
+    .empty-state p { font-size: 13px; }
+    .loading-row { padding: 40px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--accent); color: var(--text); font-size: 13px; font-family: var(--font-mono); padding: 12px 18px; border-radius: 8px; opacity: 0; transform: translateY(10px); transition: all 0.25s ease; pointer-events: none; z-index: 999; max-width: 300px; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { border-left-color: var(--danger); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 360px; transform: scale(0.96); transition: transform 0.2s; }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+    .modal input { width: 100%; margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    @media (max-width: 640px) {
+      .file-table-header, .file-row { grid-template-columns: 28px 1fr 80px; }
+      .file-size, .file-modified { display: none; }
+      .file-table-header span:nth-child(3), .file-table-header span:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── LOGIN SCREEN ─────────────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+        </svg>
+      </div>
+      ARX CLOUD LITE
+    </div>
+    <p class="login-sub">Enter your password to continue</p>
+    <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+    <label class="login-label">Password</label>
+    <input type="password" class="login-input" id="loginPassword" placeholder="••••••••••••" />
+    <button class="login-btn" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ─────────────────────────────────────────────────────── -->
+<div id="appScreen">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+        </svg>
+      </div>
+      ARX CLOUD LITE
+    </div>
+    <div class="header-right">
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span id="statusText">connected</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">logout</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div class="breadcrumb" id="breadcrumb">
+        <span class="breadcrumb-part active" data-path="">root</span>
+      </div>
+      <div class="action-bar">
+        <div class="input-row">
+          <input type="text" id="folderName" placeholder="new-folder" />
+          <button class="btn" onclick="createFolder()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+            New Folder
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#4efa8a" stroke-width="2">
+        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+      </svg>
+      <div class="drop-zone-text">
+        <span>Choose files</span> or drag &amp; drop to upload here
+      </div>
+      <input type="file" id="fileInput" multiple onchange="uploadFiles(this.files)" />
+    </div>
+
+    <div class="file-table-wrap">
+      <div class="file-table-header">
+        <span></span><span>Name</span><span>Size</span><span>Modified</span><span></span>
+      </div>
+      <div id="fileList"><div class="loading-row">loading...</div></div>
+    </div>
+  </main>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <h3>Rename</h3>
+    <input type="text" id="renameInput" placeholder="New name" />
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="confirmRename()" style="border-color:var(--accent-dim);color:var(--accent)">Rename</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = `http://${window.location.hostname}:3001`;
+let currentPath = "";
+let renameTarget = null;
+let authToken = localStorage.getItem("arx_token") || null;
+
+// ─── AUTH ─────────────────────────────────────────────────
+async function login() {
+  const password = document.getElementById("loginPassword").value;
+  const err = document.getElementById("loginError");
+  err.style.display = "none";
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    if (!res.ok) { err.style.display = "block"; return; }
+    const data = await res.json();
+    authToken = data.token;
+    localStorage.setItem("arx_token", authToken);
+    showApp();
+  } catch {
+    err.textContent = "Could not reach server.";
+    err.style.display = "block";
+  }
+}
+
+async function logout() {
+  try {
+    await apiFetch("/auth/logout", { method: "POST" });
+  } catch {}
+  authToken = null;
+  localStorage.removeItem("arx_token");
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("appScreen").style.display = "none";
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginError").style.display = "none";
+}
+
+function showApp() {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appScreen").style.display = "flex";
+  loadFiles();
+}
+
+// Attach auth token to every API call
+async function apiFetch(url, options = {}) {
+  options.headers = options.headers || {};
+  if (authToken) options.headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(`${API}${url}`, options);
+  if (res.status === 401) {
+    authToken = null;
+    localStorage.removeItem("arx_token");
+    showLogin();
+    throw new Error("Session expired");
+  }
+  return res;
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+function toast(msg, type = "ok") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show" + (type === "error" ? " error" : "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = "", 3000);
+}
+
+// ─── FORMAT HELPERS ───────────────────────────────────────
+function formatSize(bytes) {
+  if (bytes === 0) return "—";
+  const u = ["B","KB","MB","GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(1) + " " + u[i];
+}
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+}
+function fileIcon(type, name) {
+  if (type === "folder") return `<svg fill="#f0c040" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>`;
+  const ext = name.split(".").pop().toLowerCase();
+  const color = {jpg:"#f0a030",jpeg:"#f0a030",png:"#f0a030",gif:"#f0a030",webp:"#f0a030",pdf:"#fa4e4e",txt:"#8ab4f8",md:"#8ab4f8",js:"#f0c040",json:"#f0c040",zip:"#c48af0",rar:"#c48af0",mp4:"#4ecca3",mp3:"#4ecca3"}[ext] || "#6b7a6d";
+  return `<svg fill="${color}" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path fill="rgba(0,0,0,0.2)" d="M14 2v6h6"/></svg>`;
+}
+
+// ─── BREADCRUMB ───────────────────────────────────────────
+function updateBreadcrumb() {
+  const bc = document.getElementById("breadcrumb");
+  const parts = currentPath ? currentPath.split("/").filter(Boolean) : [];
+  let html = `<span class="breadcrumb-part ${parts.length===0?'active':''}" onclick="navigate('')">root</span>`;
+  let built = "";
+  parts.forEach((p, i) => {
+    built += (built ? "/" : "") + p;
+    const bp = built;
+    const isLast = i === parts.length - 1;
+    html += `<span class="breadcrumb-sep">/</span>`;
+    html += `<span class="breadcrumb-part ${isLast?'active':''}" onclick="navigate('${bp}')">${p}</span>`;
+  });
+  bc.innerHTML = html;
+}
+
+// ─── NAVIGATE ─────────────────────────────────────────────
+function navigate(p) { currentPath = p; updateBreadcrumb(); loadFiles(); }
+
+// ─── LOAD FILES ───────────────────────────────────────────
+async function loadFiles() {
+  const list = document.getElementById("fileList");
+  list.innerHTML = `<div class="loading-row">loading...</div>`;
+  try {
+    const res = await apiFetch(`/files?path=${encodeURIComponent(currentPath)}`);
+    if (!res.ok) throw new Error("Server error");
+    const files = await res.json();
+    if (files.length === 0) {
+      list.innerHTML = `<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><p>This folder is empty</p></div>`;
+      return;
+    }
+    list.innerHTML = files.map((f, i) => {
+      const filePath = currentPath ? `${currentPath}/${f.name}` : f.name;
+      const isFolder = f.type === "folder";
+      return `<div class="file-row" style="animation-delay:${i*30}ms">
+        <div class="file-icon">${fileIcon(f.type, f.name)}</div>
+        <div class="file-name" onclick="${isFolder ? `navigate('${filePath}')` : `downloadFile('${filePath}')`}">${f.name}</div>
+        <div class="file-size">${isFolder ? "—" : formatSize(f.size)}</div>
+        <div class="file-modified">${formatDate(f.modified)}</div>
+        <div class="file-actions">
+          <button class="icon-btn" title="Rename" onclick="openRename('${filePath}','${f.name}')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          ${!isFolder ? `<button class="icon-btn" title="Download" onclick="downloadFile('${filePath}')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          </button>` : ""}
+          <button class="icon-btn del" title="Delete" onclick="deleteFile('${filePath}')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join("");
+  } catch (err) {
+    if (err.message !== "Session expired") {
+      list.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load: ${err.message}</p></div>`;
+      document.getElementById("statusText").textContent = "disconnected";
+    }
+  }
+}
+
+// ─── UPLOAD ───────────────────────────────────────────────
+async function uploadFiles(files) {
+  if (!files || !files.length) return;
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await apiFetch(`/upload?path=${encodeURIComponent(currentPath)}`, { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      toast(`Uploaded: ${file.name}`);
+    } catch (err) {
+      if (err.message !== "Session expired") toast(`Upload failed: ${file.name}`, "error");
+    }
+  }
+  loadFiles();
+  document.getElementById("fileInput").value = "";
+}
+
+// ─── DOWNLOAD ─────────────────────────────────────────────
+function downloadFile(filePath) {
+  window.open(`${API}/download?path=${encodeURIComponent(filePath)}&token=${authToken}`, "_blank");
+}
+
+// ─── CREATE FOLDER ────────────────────────────────────────
+async function createFolder() {
+  const nameEl = document.getElementById("folderName");
+  const name = nameEl.value.trim();
+  if (!name) { toast("Enter a folder name", "error"); return; }
+  const fullPath = currentPath ? `${currentPath}/${name}` : name;
+  try {
+    const res = await apiFetch("/folder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: fullPath }) });
+    if (!res.ok) throw new Error("Failed");
+    toast(`Folder "${name}" created`);
+    nameEl.value = "";
+    loadFiles();
+  } catch (err) {
+    if (err.message !== "Session expired") toast("Failed to create folder", "error");
+  }
+}
+
+// ─── DELETE ───────────────────────────────────────────────
+async function deleteFile(filePath) {
+  if (!confirm(`Delete "${filePath.split("/").pop()}"?`)) return;
+  try {
+    const res = await apiFetch("/file", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: filePath }) });
+    if (!res.ok) throw new Error("Failed");
+    toast("Deleted");
+    loadFiles();
+  } catch (err) {
+    if (err.message !== "Session expired") toast("Delete failed", "error");
+  }
+}
+
+// ─── RENAME ───────────────────────────────────────────────
+function openRename(filePath, name) {
+  renameTarget = filePath;
+  document.getElementById("renameInput").value = name;
+  document.getElementById("renameModal").classList.add("open");
+  setTimeout(() => document.getElementById("renameInput").select(), 50);
+}
+function closeModal() { document.getElementById("renameModal").classList.remove("open"); renameTarget = null; }
+async function confirmRename() {
+  const newName = document.getElementById("renameInput").value.trim();
+  if (!newName || !renameTarget) return;
+  const dir = renameTarget.includes("/") ? renameTarget.substring(0, renameTarget.lastIndexOf("/")) : "";
+  const newPath = dir ? `${dir}/${newName}` : newName;
+  try {
+    const res = await apiFetch("/rename", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ oldPath: renameTarget, newPath }) });
+    if (!res.ok) throw new Error("Failed");
+    toast("Renamed");
+    closeModal();
+    loadFiles();
+  } catch (err) {
+    if (err.message !== "Session expired") toast("Rename failed", "error");
+  }
+}
+
+// ─── DRAG & DROP ──────────────────────────────────────────
+const dropZone = document.getElementById("dropZone");
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop", e => { e.preventDefault(); dropZone.classList.remove("dragover"); uploadFiles(e.dataTransfer.files); });
+
+// ─── KEYBOARD ─────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+  if (e.key === "Enter" && document.getElementById("renameModal").classList.contains("open")) confirmRename();
+});
+document.getElementById("folderName")?.addEventListener("keydown", e => { if (e.key === "Enter") createFolder(); });
+document.getElementById("loginPassword")?.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+
+// ─── INIT ─────────────────────────────────────────────────
+async function init() {
+  if (!authToken) { showLogin(); return; }
+  try {
+    const res = await fetch(`${API}/auth/verify`, { headers: { "Authorization": `Bearer ${authToken}` } });
+    if (res.ok) { showApp(); } else { authToken = null; localStorage.removeItem("arx_token"); showLogin(); }
+  } catch { showLogin(); }
+}
+init();
+</script>
+</body>
+</html>
